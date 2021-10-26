@@ -1,0 +1,23 @@
+{
+    "name": "bot_ads_3.0",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "start": "node index.js",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Apenasgabs/Bot_ADS_3.0.git"
+    },
+    "author": "Gabriel Rodrigues",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/Apenasgabs/Bot_ADS_3.0/issues"
+    },
+    "homepage": "https://github.com/Apenasgabs/Bot_ADS_3.0#readme",
+    "dependencies": {
+        "venom-bot": "^3.1.11"
+    }
+}
