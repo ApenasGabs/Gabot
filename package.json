@@ -1,5 +1,5 @@
 {
-    "name": "bot_ads_3.0",
+    "name": "gabot",
     "version": "1.0.0",
     "description": "",
     "main": "index.js",
@@ -9,14 +9,14 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/Apenasgabs/Bot_ADS_3.0.git"
+        "url": "git+https://github.com/Apenasgabs/Gabot.git"
     },
     "author": "Gabriel Rodrigues",
     "license": "ISC",
     "bugs": {
-        "url": "https://github.com/Apenasgabs/Bot_ADS_3.0/issues"
+        "url": "https://github.com/Apenasgabs/Gabot/issues"
     },
-    "homepage": "https://github.com/Apenasgabs/Bot_ADS_3.0#readme",
+    "homepage": "https://github.com/Apenasgabs/Gabot#readme",
     "dependencies": {
         "venom-bot": "^3.1.11"
     }
