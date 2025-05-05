@@ -1,23 +1,19 @@
 {
-    "name": "gabot",
-    "version": "1.0.0",
-    "description": "",
-    "main": "index.js",
-    "scripts": {
-        "start": "node index.js",
-        "test": "echo \"Error: no test specified\" && exit 1"
-    },
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/Apenasgabs/Gabot.git"
-    },
-    "author": "Gabriel Rodrigues",
-    "license": "ISC",
-    "bugs": {
-        "url": "https://github.com/Apenasgabs/Gabot/issues"
-    },
-    "homepage": "https://github.com/Apenasgabs/Gabot#readme",
-    "dependencies": {
-        "venom-bot": "^3.1.11"
-    }
+  "name": "gabot",
+  "version": "1.0.0",
+  "description": "Bot de WhatsApp que busca informações de repositórios no GitHub",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "axios": "^1.6.2",
+    "venom-bot": "^2.0.2"
+  },
+  "keywords": [
+    "whatsapp",
+    "bot",
+    "github",
+    "venom-bot"
+  ]
 }
