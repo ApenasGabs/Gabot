@@ -14,9 +14,6 @@ const COOLDOWN_PERIOD = 5000;
 // Tempo para ignorar mensagens duplicadas (30 segundos)
 const DUPLICATE_MESSAGE_TIMEOUT = 30000;
 
-// Padrão para validar nome de repositórios GitHub
-const GITHUB_REPO_PATTERN = /^[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+$/;
-
 // Mensagens padrão
 const DEFAULT_MESSAGES = {
   welcome:
@@ -62,6 +59,5 @@ module.exports = {
   ALLOWED_GROUPS,
   COOLDOWN_PERIOD,
   DUPLICATE_MESSAGE_TIMEOUT,
-  GITHUB_REPO_PATTERN,
   DEFAULT_MESSAGES,
 };

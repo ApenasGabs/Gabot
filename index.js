@@ -154,3 +154,23 @@ function setupCleanup(client) {
 
 // Iniciar o bot
 initializeBot();
+
+
+/**
+ * Servidor HTTP para manter a aplicação ativa no Render
+ */
+const http = require("http");
+
+const PORT = process.env.PORT || 3000;
+
+http.createServer((req, res) => {
+  if (req.url === "/ping") {
+    res.writeHead(200, { "Content-Type": "text/plain" });
+    res.end("poing");
+  } else {
+    res.writeHead(404);
+    res.end();
+  }
+}).listen(PORT, () => {
+  logger.info(`Servidor HTTP de keep-alive escutando na porta ${PORT}`);
+});

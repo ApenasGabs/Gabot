@@ -1,0 +1,77 @@
+{
+  "intents": {
+    "greeting": {
+      "keywords": ["oi", "olá", "bom dia", "boa tarde", "boa noite", "e aí", "fala", "salve"],
+      "responses": [
+        "Olá! Sou o GaBot 🤖 Pronto pra buscar repositórios? Me mande no formato `usuario/repositorio`.",
+        "Oi! Tudo certo? Me envie o nome de um repositório no formato `usuario/repositorio` e eu busco as informações pra você.",
+        "Fala aí! Só mandar o repo tipo `usuario/repositorio` que eu já procuro 😎"
+      ]
+    },
+    "help": {
+      "keywords": ["como usar", "ajuda", "exemplo", "formato", "funciona"],
+      "responses": [
+        "Você pode me enviar o nome de um repositório do GitHub no formato `usuario/repositorio`. Por exemplo: `orkestral/venom`.",
+        "É só mandar algo como `openai/gpt-4` e eu te mostro as infos!",
+        "Use o formato `usuario/repositorio`, tudo junto e com barra 😉"
+      ]
+    },
+    "menu": {
+      "keywords": ["gabot"],
+      "responses": [
+        "🤖 *Menu do GaBot*\n\n1️⃣ - Buscar repositório GitHub\n2️⃣ - Ver ajuda\n3️⃣ - Sobre o bot\n\nDigite o número da opção desejada ou envie o nome de um repositório no formato 'usuario/repositorio'"
+      ]
+    },
+    "about": {
+      "keywords": ["sobre"],
+      "responses": [
+        "ℹ️ *Sobre o GaBot*\n\nGaBot é um bot do WhatsApp que busca informações sobre repositórios do GitHub.\n\nDesenvolvido com ❤️ usando:\n• Node.js\n• Venom-Bot\n• GitHub API\n\nPara ver o menu, envie 'gabot'"
+      ]
+    },
+    "invalid_format": {
+      "keywords": [],
+      "rules": ["mensagem sem '/' ou fora do padrão esperado"],
+      "responses": [
+        "❌ Formato inválido! Por favor, envie no formato `usuario/repositorio`.",
+        "Opa, parece que não entendi. Tenta assim: `orkestral/venom`.",
+        "Hmm... esse formato tá estranho. Tente algo como `usuario/repositorio`."
+      ]
+    },
+    "searching": {
+      "responses": [
+        "🔍 Buscando informações do repositório...",
+        "Aguenta aí que tô procurando os dados pra você...",
+        "📡 Conectando no GitHub... um segundo!"
+      ]
+    },
+    "not_found": {
+      "responses": [
+        "❌ Não encontrei esse repositório. Verifique se o nome está correto e tente de novo.",
+        "Não achei nada 😕 Confere o nome e tenta novamente.",
+        "Hmm... esse repositório não existe ou está privado. Dá uma olhada aí."
+      ]
+    },
+    "error": {
+      "responses": [
+        "Ocorreu um erro ao processar sua solicitação. Tente novamente mais tarde.",
+        "Algo deu errado do meu lado 😓 Pode tentar de novo daqui a pouco?",
+        "Erro interno. Já tô investigando! 🔧"
+      ]
+    },
+    "farewell": {
+      "keywords": ["tchau", "até mais", "até logo", "até breve", "adeus"],
+      "responses": [
+        "Até mais! Se precisar de mais informações sobre repositórios, é só chamar! 👋",
+        "Tchau! Volte sempre que quiser buscar informações de repositórios! 😊",
+        "Até logo! Estou aqui se precisar de mais informações sobre o GitHub! 👋"
+      ]
+    },
+    "unknown": {
+      "responses": [
+        "Desculpe, não entendi. Envie 'gabot' para ver o menu de opções!",
+        "Hmm... não consegui entender. Tente enviar 'gabot' para ver o menu!",
+        "Ops! Não entendi essa mensagem. Envie 'gabot' para ver as opções disponíveis."
+      ]
+    }
+  }
+} 

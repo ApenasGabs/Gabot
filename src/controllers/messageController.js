@@ -1,9 +1,10 @@
 /**
  * Controlador para processamento de mensagens
  */
-const { GITHUB_REPO_PATTERN, ALLOWED_GROUPS, DEFAULT_MESSAGES } = require("../config/constants");
+const { ALLOWED_GROUPS, DEFAULT_MESSAGES } = require("../config/constants");
 const { getRepositoryInfo } = require("../services/githubService");
 const messageService = require("../services/messageService");
+const intentService = require("../services/intentService");
 const {
   shouldIgnoreMessage,
   updateMessageControl,
@@ -24,24 +25,20 @@ function isGroupAllowed(groupId) {
 }
 
 /**
- * Mostra o menu de opções do bot
+ * Mostra o menu do bot
  * @param {object} client - Cliente Venom
  * @param {object} message - Objeto de mensagem do Venom
  */
 async function showMenu(client, message) {
-  // Limpa o estado de busca ao mostrar o menu
-  userSearchState.delete(message.from);
   await messageService.sendMessage(client, message.from, DEFAULT_MESSAGES.menu);
 }
 
 /**
- * Mostra a mensagem de ajuda
+ * Mostra a ajuda do bot
  * @param {object} client - Cliente Venom
  * @param {object} message - Objeto de mensagem do Venom
  */
 async function showHelp(client, message) {
-  // Limpa o estado de busca ao mostrar a ajuda
-  userSearchState.delete(message.from);
   await messageService.sendMessage(client, message.from, DEFAULT_MESSAGES.help);
 }
 
@@ -51,8 +48,6 @@ async function showHelp(client, message) {
  * @param {object} message - Objeto de mensagem do Venom
  */
 async function showAbout(client, message) {
-  // Limpa o estado de busca ao mostrar informações
-  userSearchState.delete(message.from);
   await messageService.sendMessage(client, message.from, DEFAULT_MESSAGES.about);
 }
 
@@ -79,58 +74,60 @@ async function handleMessage(client, message) {
       }
     }
 
-    // Verificar controle anti-spam
-    if (shouldIgnoreMessage(message.from, message.body)) {
+    // Verifica se a mensagem tem corpo
+    if (!message.body && message.type !== 'sticker') {
+      logger.logIgnoredMessage("mensagem sem corpo");
+      return;
+    }
+
+    // Verificar controle anti-spam apenas se não estiver em estado de busca
+    if (!userSearchState.get(message.from) && shouldIgnoreMessage(message.from, message.body || '')) {
       logger.logIgnoredMessage(
-        message.body.trim() === "" ? "conteúdo vazio" : "cooldown ou duplicada",
+        !message.body ? "conteúdo vazio" : "cooldown ou duplicada",
         message.from
       );
       return;
     }
 
     // Atualiza controle de mensagens
-    updateMessageControl(message.from, message.body);
+    updateMessageControl(message.from, message.body || '');
 
-    // Verifica se a mensagem contém "gabot"
-    if (message.body.toLowerCase().includes("gabot")) {
-      await showMenu(client, message);
-      return;
-    }
+    // Detecta a intenção da mensagem
+    const intent = message.body ? intentService.detectIntent(message.body) : 'unknown';
 
-    // Verifica se o usuário está em estado de busca
-    if (userSearchState.get(message.from)) {
-      // Se estiver em estado de busca, tenta processar como repositório
-      if (GITHUB_REPO_PATTERN.test(message.body)) {
+    // Processa a intenção detectada
+    switch (intent) {
+      case "menu":
+        await showMenu(client, message);
+        break;
+      case "help":
+        await showHelp(client, message);
+        break;
+      case "about":
+        await showAbout(client, message);
+        break;
+      case "emoji":
+        try {
+          const response = intentService.getResponse(message.body);
+          await messageService.sendMessage(client, message.from, response);
+        } catch (error) {
+          logger.error("Erro ao processar emoji", error);
+          await messageService.sendMessage(client, message.from, "Desculpe, tive um problema ao processar o emoji 😅");
+        }
+        break;
+      case "greeting":
+      case "farewell":
+        await messageService.sendMessage(client, message.from, intentService.getRandomResponse(intent));
+        break;
+      case "searching":
         await handleRepositoryRequest(client, message);
-        userSearchState.delete(message.from); // Limpa o estado após a busca
-      } else {
-        await messageService.sendMessage(client, message.from, DEFAULT_MESSAGES.invalidFormat);
-      }
-      return;
-    }
-
-    // Processa opções do menu
-    const menuOption = message.body.trim();
-    if (menuOption === "1") {
-      userSearchState.set(message.from, true); // Ativa o estado de busca
-      await messageService.sendMessage(client, message.from, "Digite o nome do repositório no formato 'usuario/repositorio'");
-      return;
-    } else if (menuOption === "2") {
-      await showHelp(client, message);
-      return;
-    } else if (menuOption === "3") {
-      await showAbout(client, message);
-      return;
-    }
-
-    // Se não estiver em nenhum estado especial, verifica se é um repositório
-    if (GITHUB_REPO_PATTERN.test(message.body)) {
-      await handleRepositoryRequest(client, message);
-    } else {
-      await handleInvalidFormat(client, message);
+        break;
+      default:
+        await messageService.sendMessage(client, message.from, intentService.getRandomResponse("invalid_format"));
     }
   } catch (error) {
-    logger.error("Erro ao processar mensagem", error);
+    logger.error("Erro ao processar mensagem:", error);
+    await messageService.sendMessage(client, message.from, "Desculpe, ocorreu um erro ao processar sua mensagem 😅");
   }
 }
 
@@ -153,7 +150,7 @@ async function handleRepositoryRequest(client, message) {
     );
 
     // Envia uma mensagem de espera
-    await messageService.sendSearchingMessage(client, message.from);
+    await messageService.sendMessage(client, message.from, intentService.getRandomResponse("searching"));
 
     // Busca informações do repositório
     const repoInfo = await getRepositoryInfo(repoPath);
@@ -166,7 +163,13 @@ async function handleRepositoryRequest(client, message) {
     stateController.setUserState(message.from, stateController.STATE.INITIAL);
   } catch (error) {
     logger.error(`Erro ao buscar informações para ${repoPath}`, error);
-    await messageService.sendNotFoundMessage(client, message.from);
+    
+    let errorMessage = intentService.getRandomResponse("not_found");
+    if (error.message.includes("Timeout")) {
+      errorMessage = "Desculpe, demorei muito para buscar as informações 😅\nTente novamente em alguns segundos.";
+    }
+
+    await messageService.sendMessage(client, message.from, errorMessage);
 
     // Atualiza o estado do usuário para erro
     stateController.setUserState(message.from, stateController.STATE.ERROR, {
@@ -175,27 +178,8 @@ async function handleRepositoryRequest(client, message) {
   }
 }
 
-/**
- * Processa mensagens com formato inválido
- *
- * @param {object} client - Cliente Venom
- * @param {object} message - Objeto de mensagem do Venom
- */
-async function handleInvalidFormat(client, message) {
-  logger.info(`Formato inválido de repositório: ${message.body}`);
-
-  // Atualiza o estado do usuário
-  stateController.setUserState(
-    message.from,
-    stateController.STATE.WAITING_REPO
-  );
-
-  await messageService.sendInvalidFormatMessage(client, message.from);
-}
-
 module.exports = {
   handleMessage,
   handleRepositoryRequest,
-  handleInvalidFormat,
   isGroupAllowed,
 };

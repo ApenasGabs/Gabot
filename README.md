@@ -11,7 +11,7 @@ Bot de WhatsApp que utiliza a biblioteca Venom-Bot para buscar e enviar informa�
 - Suporte para múltiplos idiomas
 - Controle de estado da conversa para melhor interação
 
-## Como usar
+## Configuração
 
 1. Instale as dependências:
 
@@ -19,15 +19,28 @@ Bot de WhatsApp que utiliza a biblioteca Venom-Bot para buscar e enviar informa�
 npm install
 ```
 
-2. Inicie o bot:
+2. Configure o token do GitHub:
+
+Crie um token de acesso pessoal no GitHub:
+1. Acesse https://github.com/settings/tokens
+2. Clique em "Generate new token"
+3. Selecione os escopos: `repo` e `read:user`
+4. Copie o token gerado
+
+Configure o token no ambiente:
+```bash
+export GITHUB_TOKEN=seu_token_aqui
+```
+
+3. Inicie o bot:
 
 ```bash
 npm start
 ```
 
-3. Escaneie o código QR que aparecerá no terminal com seu WhatsApp
+4. Escaneie o código QR que aparecerá no terminal com seu WhatsApp
 
-4. Envie mensagens para o bot no formato "usuario/repositorio" para receber informações.
+5. Envie mensagens para o bot no formato "usuario/repositorio" para receber informações.
 
 ## Estrutura do Projeto
 
@@ -37,6 +50,7 @@ O projeto está organizado seguindo uma arquitetura modular:
 📁 projeto/
 ├── 📁 config/
 │   ├── venom-config.js       // Configurações do Venom
+│   ├── github-config.js      // Configurações do GitHub
 │   └── constants.js          // Constantes do projeto
 │
 ├── 📁 controllers/
@@ -70,6 +84,7 @@ O projeto está organizado seguindo uma arquitetura modular:
 #### Config
 
 - **venom-config.js**: Configurações para inicialização do Venom Bot.
+- **github-config.js**: Configurações para integração com a API do GitHub.
 - **constants.js**: Constantes utilizadas em todo o projeto, como padrões de validação e tempos de espera.
 
 #### Controllers

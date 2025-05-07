@@ -3,6 +3,10 @@
  */
 const axios = require("axios");
 const { formatDate, formatNumber } = require("../utils/helpers");
+const { GITHUB_CONFIG } = require("../config/github-config");
+
+// Cria uma instância do axios com as configurações do GitHub
+const githubClient = axios.create(GITHUB_CONFIG);
 
 /**
  * Busca informações de um repositório no GitHub
@@ -11,13 +15,14 @@ const { formatDate, formatNumber } = require("../utils/helpers");
  */
 async function getRepositoryInfo(repoPath) {
   try {
-    // Busca informações do repositóriols
-    const repoResponse = await axios.get(
-      `https://api.github.com/repos/${repoPath}`
-    );
+    // Busca informações do repositório
+    const repoResponse = await githubClient.get(`/repos/${repoPath}`);
+    console.log("repoResponse: ", repoResponse);
 
     // Busca as linguagens do repositório
-    const languagesResponse = await axios.get(repoResponse.data.languages_url);
+    const languagesResponse = await githubClient.get(
+      repoResponse.data.languages_url
+    );
 
     // Extrair informações relevantes
     const {
@@ -56,9 +61,14 @@ async function getRepositoryInfo(repoPath) {
       `_Informações fornecidas pela API do GitHub_`
     );
   } catch (error) {
+    console.log("error: ", error);
     console.error("Erro na API do GitHub:", error.message);
-    if (error.response && error.response.status === 404) {
-      return `❌ Repositório "${repoPath}" não encontrado.`;
+    if (error.response) {
+      if (error.response.status === 404) {
+        return `❌ Repositório "${repoPath}" não encontrado.`;
+      } else if (error.response.status === 403) {
+        return `❌ Limite de requisições excedido. Por favor, tente novamente em alguns minutos.`;
+      }
     }
     throw new Error("Falha ao obter informações do repositório.");
   }
