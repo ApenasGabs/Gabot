@@ -11,6 +11,9 @@ const {
 const logger = require("../utils/logger");
 const stateController = require("./stateController");
 
+// Armazena o estado de busca por usuário
+const userSearchState = new Map();
+
 /**
  * Verifica se o grupo é permitido
  * @param {string} groupId - ID do grupo
@@ -26,6 +29,8 @@ function isGroupAllowed(groupId) {
  * @param {object} message - Objeto de mensagem do Venom
  */
 async function showMenu(client, message) {
+  // Limpa o estado de busca ao mostrar o menu
+  userSearchState.delete(message.from);
   await messageService.sendMessage(client, message.from, DEFAULT_MESSAGES.menu);
 }
 
@@ -35,6 +40,8 @@ async function showMenu(client, message) {
  * @param {object} message - Objeto de mensagem do Venom
  */
 async function showHelp(client, message) {
+  // Limpa o estado de busca ao mostrar a ajuda
+  userSearchState.delete(message.from);
   await messageService.sendMessage(client, message.from, DEFAULT_MESSAGES.help);
 }
 
@@ -44,6 +51,8 @@ async function showHelp(client, message) {
  * @param {object} message - Objeto de mensagem do Venom
  */
 async function showAbout(client, message) {
+  // Limpa o estado de busca ao mostrar informações
+  userSearchState.delete(message.from);
   await messageService.sendMessage(client, message.from, DEFAULT_MESSAGES.about);
 }
 
@@ -88,9 +97,22 @@ async function handleMessage(client, message) {
       return;
     }
 
+    // Verifica se o usuário está em estado de busca
+    if (userSearchState.get(message.from)) {
+      // Se estiver em estado de busca, tenta processar como repositório
+      if (GITHUB_REPO_PATTERN.test(message.body)) {
+        await handleRepositoryRequest(client, message);
+        userSearchState.delete(message.from); // Limpa o estado após a busca
+      } else {
+        await messageService.sendMessage(client, message.from, DEFAULT_MESSAGES.invalidFormat);
+      }
+      return;
+    }
+
     // Processa opções do menu
     const menuOption = message.body.trim();
     if (menuOption === "1") {
+      userSearchState.set(message.from, true); // Ativa o estado de busca
       await messageService.sendMessage(client, message.from, "Digite o nome do repositório no formato 'usuario/repositorio'");
       return;
     } else if (menuOption === "2") {
@@ -101,7 +123,7 @@ async function handleMessage(client, message) {
       return;
     }
 
-    // Verificar se o formato da mensagem parece ser um repositório GitHub
+    // Se não estiver em nenhum estado especial, verifica se é um repositório
     if (GITHUB_REPO_PATTERN.test(message.body)) {
       await handleRepositoryRequest(client, message);
     } else {

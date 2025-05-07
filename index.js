@@ -2,14 +2,17 @@
  * GitBot - Um bot do WhatsApp para buscar informações de repositórios do GitHub
  */
 const venom = require("venom-bot");
-const venomConfig = require("./config/venom-config");
-const { DEFAULT_PHONE_NUMBER, ALLOWED_GROUPS } = require("./config/constants");
+const venomConfig = require("./src/config/venom-config");
+const {
+  DEFAULT_PHONE_NUMBER,
+  ALLOWED_GROUPS,
+} = require("./src/config/constants");
 const {
   handleMessage,
   isGroupAllowed,
-} = require("./controllers/messageController");
-const messageService = require("./services/messageService");
-const logger = require("./utils/logger");
+} = require("./src/controllers/messageController");
+const messageService = require("./src/services/messageService");
+const logger = require("./src/utils/logger");
 
 /**
  * Inicializa o bot e configura os manipuladores de eventos
