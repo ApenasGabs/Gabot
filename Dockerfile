@@ -4,27 +4,15 @@ FROM node:20-slim
 # Impede prompts durante instalação de pacotes
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Instala dependências necessárias para rodar o Chromium
+# Instala apenas as dependências essenciais
 RUN apt-get update && apt-get install -y \
-  ca-certificates \
-  fonts-liberation \
-  libappindicator3-1 \
-  libasound2 \
-  libatk-bridge2.0-0 \
-  libatk1.0-0 \
-  libcups2 \
-  libdbus-1-3 \
-  libgdk-pixbuf2.0-0 \
-  libnspr4 \
-  libnss3 \
-  libx11-xcb1 \
-  libxcomposite1 \
-  libxdamage1 \
-  libxrandr2 \
-  xdg-utils \
-  chromium \
-  --no-install-recommends && \
-  apt-get clean && rm -rf /var/lib/apt/lists/*
+    # python3 \
+    # python3-pip \
+    # build-essential \
+    chromium \
+    --no-install-recommends && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # Define o diretório de trabalho
 WORKDIR /app
@@ -33,7 +21,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Instala as dependências da aplicação
-RUN npm ci
+RUN npm ci --only=production
 
 # Copia o restante dos arquivos
 COPY . .
