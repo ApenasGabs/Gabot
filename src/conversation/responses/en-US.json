@@ -1,0 +1,8 @@
+{
+  "welcome": "Hello! I'm GitBot 🤖\n\nSend the name of a repository in the format \"username/repository\" and I'll look up information about it on GitHub!",
+  "searching": "🔍 Searching for repository information...",
+  "notFound": "❌ Couldn't find information about this repository.\nPlease check if the format is correct (username/repository) and try again.",
+  "invalidFormat": "Please send the repository name in the \"username/repository\" format.\nFor example: \"orkestral/venom\"",
+  "error": "An error occurred while processing your request. Please try again later.",
+  "groupWelcome": "Hello! I'm now available in this group too! 👋\nSend the name of a repository in the format \"username/repository\" and I'll look up information about it on GitHub!"
+}

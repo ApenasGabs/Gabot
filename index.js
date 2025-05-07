@@ -1,93 +1,153 @@
-const venom = require('venom-bot');
-const { getRepositoryInfo } = require('./github-api');
+/**
+ * GitBot - Um bot do WhatsApp para buscar informações de repositórios do GitHub
+ */
+const venom = require("venom-bot");
+const venomConfig = require("./config/venom-config");
+const { DEFAULT_PHONE_NUMBER, ALLOWED_GROUPS } = require("./config/constants");
+const {
+  handleMessage,
+  isGroupAllowed,
+} = require("./controllers/messageController");
+const messageService = require("./services/messageService");
+const logger = require("./utils/logger");
 
-const PHONE_NUMBER = '@c.us';
+/**
+ * Inicializa o bot e configura os manipuladores de eventos
+ */
+function initializeBot() {
+  logger.info("Iniciando GitBot...");
 
-// Inicialização do bot com configurações melhoradas
-venom
-  .create({
-    session: 'gabot-session',
-    headless: true, // Alterado para true para evitar problemas de interface
-    logQR: true, // Mostra o QR code no terminal
-    useChrome: true, // Força o uso do Chrome em vez de Chromium
-    browserArgs: [
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage',
-      '--disable-accelerated-2d-canvas',
-      '--no-first-run',
-      '--no-zygote',
-      '--single-process',
-      '--disable-gpu'
-    ],
-    disableWelcome: true, // Desabilita a mensagem de boas-vindas
-    autoClose: 60000, // Fecha automaticamente após 60 segundos se não for escaneado
-    debug: false
-  })
-  .then((client) => start(client))
-  .catch((err) => {
-    console.error('Erro ao inicializar:', err);
-  });
+  venom
+    .create(venomConfig)
+    .then((client) => startBot(client))
+    .catch((err) => {
+      logger.error("Erro ao inicializar o bot", err);
+      process.exit(1);
+    });
+}
 
-// Função principal do bot
-async function start(client) {
-  console.log('Bot iniciado! Enviando mensagem inicial...');
-
+/**
+ * Envia uma mensagem de boas-vindas para grupos permitidos
+ *
+ * @param {object} client - Cliente Venom inicializado
+ */
+async function sendWelcomeToAllowedGroups(client) {
   try {
-    // Envia uma mensagem inicial para o número especificado
-    await client.sendText(
-      PHONE_NUMBER,
-      'Olá! Sou o GitBot 🤖\n\n' +
-      'Envie o nome de um repositório no formato "usuario/repositorio" ' +
-      'e eu buscarei informações sobre ele no GitHub!'
-    );
-  } catch (error) {
-    console.error('Erro ao enviar mensagem inicial:', error);
-  }
-
-  // Escuta por mensagens recebidas
-  client.onMessage(async (message) => {
-    // Ignorar mensagens de grupos
-    if (message.isGroupMsg) return;
-
-    console.log('Mensagem recebida:', message.body);
-
-    // Verificar se o formato da mensagem parece ser um repositório GitHub
-    const repoPattern = /^[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+$/;
-    if (repoPattern.test(message.body)) {
-      // Enviar uma mensagem de espera
-      await client.sendText(
-        message.from,
-        '🔍 Buscando informações do repositório...'
-      );
-
+    for (const groupId of ALLOWED_GROUPS) {
       try {
-        // Buscar informações do repositório
-        const repoInfo = await getRepositoryInfo(message.body);
-
-        // Enviar mensagem formatada com as informações
-        await client.sendText(message.from, repoInfo);
-      } catch (error) {
-        console.error('Erro ao buscar informações:', error);
-        await client.sendText(
-          message.from,
-          '❌ Não foi possível encontrar informações sobre este repositório.\n' +
-          'Verifique se o formato está correto (usuário/repositório) e tente novamente.'
+        // Verifica se o bot está no grupo antes de enviar a mensagem
+        const groupInfo = await client.getGroupMetadata(groupId);
+        if (groupInfo) {
+          await messageService.sendGroupWelcomeMessage(client, groupId);
+          logger.success(
+            `Mensagem de boas-vindas enviada para o grupo: ${
+              groupInfo.name || groupId
+            }`
+          );
+        }
+      } catch (groupError) {
+        logger.error(
+          `Não foi possível enviar mensagem para o grupo ${groupId}`,
+          groupError
         );
       }
-    } else {
-      await client.sendText(
-        message.from,
-        'Por favor, envie o nome do repositório no formato "usuario/repositorio".\n' +
-        'Por exemplo: "orkestral/venom"'
-      );
     }
-  });
-
-  // Função para lidar com o fechamento do programa
-  process.on('SIGINT', () => {
-    console.log('Encerrando bot...');
-    client.close();
-    process.exit();
-  });
+  } catch (error) {
+    logger.error("Erro ao enviar mensagens de boas-vindas para grupos", error);
+  }
 }
+
+/**
+ * Configura o bot após a inicialização bem-sucedida
+ *
+ * @param {object} client - Cliente Venom inicializado
+ */
+async function startBot(client) {
+  logger.info("Bot iniciado com sucesso!");
+
+  try {
+    // Enviar mensagem inicial para número configurado, se fornecido
+    if (DEFAULT_PHONE_NUMBER && DEFAULT_PHONE_NUMBER !== "@c.us") {
+      await messageService.sendWelcomeMessage(client, DEFAULT_PHONE_NUMBER);
+    }
+
+    // Enviar mensagem para grupos permitidos
+    await sendWelcomeToAllowedGroups(client);
+
+    // Configurar manipulador de mensagens
+    client.onMessage(async (message) => {
+      try {
+        await handleMessage(client, message);
+      } catch (error) {
+        logger.error("Erro ao processar mensagem", error);
+      }
+    });
+
+    // Configurar manipulador para quando o bot for adicionado a um grupo
+    client.onAddedToGroup(async (chatEvent) => {
+      const groupId = chatEvent.id;
+      logger.info(
+        `Bot adicionado ao grupo: ${chatEvent.formattedTitle} (${groupId})`
+      );
+
+      // Se for um grupo permitido, envia mensagem de boas-vindas
+      if (isGroupAllowed(groupId)) {
+        await messageService.sendGroupWelcomeMessage(client, groupId);
+      } else {
+        logger.info(
+          `Grupo ${groupId} não está na lista de permitidos. Considere adicionar à configuração.`
+        );
+      }
+    });
+
+    // Configurar manipulador de desconexão
+    client.onStateChange((state) => {
+      if (state === "CONFLICT" || state === "UNLAUNCHED") {
+        client.useHere();
+      }
+    });
+
+    // Configurar manipulador de QR code
+    client.onQR((qrCode) => {
+      logger.info("Novo QR Code recebido. Escaneie para autenticar.");
+    });
+
+    // Configurar manipulador de erro
+    client.onError((error) => {
+      logger.error("Erro no cliente Venom", error);
+    });
+
+    // Configurar limpeza na saída
+    setupCleanup(client);
+  } catch (error) {
+    logger.error("Erro ao configurar o bot", error);
+  }
+}
+
+/**
+ * Configura o encerramento adequado do bot
+ *
+ * @param {object} client - Cliente Venom
+ */
+function setupCleanup(client) {
+  const cleanup = async () => {
+    logger.info("Encerrando bot...");
+
+    try {
+      await client.close();
+      logger.info("Bot encerrado com sucesso!");
+    } catch (error) {
+      logger.error("Erro ao encerrar o bot", error);
+    }
+
+    process.exit(0);
+  };
+
+  // Captura sinais de encerramento
+  process.on("SIGINT", cleanup);
+  process.on("SIGTERM", cleanup);
+  process.on("SIGHUP", cleanup);
+}
+
+// Iniciar o bot
+initializeBot();

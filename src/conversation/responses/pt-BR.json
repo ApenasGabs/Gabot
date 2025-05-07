@@ -1,0 +1,7 @@
+{
+  "welcome": "Olá! Sou o GitBot 🤖\n\nEnvie o nome de um repositório no formato \"usuario/repositorio\" e eu buscarei informações sobre ele no GitHub!",
+  "searching": "🔍 Buscando informações do repositório...",
+  "notFound": "❌ Não foi possível encontrar informações sobre este repositório.\nVerifique se o formato está correto (usuário/repositório) e tente novamente.",
+  "invalidFormat": "Por favor, envie o nome do repositório no formato \"usuario/repositorio\".\nPor exemplo: \"orkestral/venom\"",
+  "error": "Ocorreu um erro ao processar sua solicitação. Por favor, tente novamente mais tarde."
+}
